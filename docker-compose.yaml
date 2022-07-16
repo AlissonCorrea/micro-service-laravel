@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+
+    app:
+        build: .
+        container_name: micro-service-laravel-app
+        entrypoint: dockerize -template ./.docker/app/.env:.env -wait tcp://db:3306 -timeout 40s ./.docker/entrypoint.sh
+        environment:
+            - _DB_HOST=db
+            - _DB_DATABASE=micro-service-laravel
+            - _DB_USERNAME=root
+            - _DB_PASSWORD=root
+        volumes:
+            - .:/var/www
+        networks:
+            - app-network
+        depends_on:
+            - db
+            - redis
+
+    nginx:
+        build: .docker/nginx
+        container_name: micro-service-laravel-nginx
+        restart: always
+        tty: true
+        ports:
+            - "8000:80"
+        volumes:
+            - .:/var/www
+        networks:
+            - app-network
+        depends_on:
+            - app
+
+    db:
+        build: ./.docker/mysql
+        container_name: micro-service-laravel-db
+        restart: always
+        tty: true
+        ports:
+            - "33006:3306"
+        volumes:
+            - ./.docker/dbdata:/var/lib/mysql
+        environment:
+            - MYSQL_DATABASE=micro-service-laravel
+            - MYSQL_ROOT_PASSWORD=root
+        networks:
+            - app-network
+
+    redis:
+        image: redis:alpine
+        container_name: micro-service-laravel-redis
+        expose:
+            - 6379
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
