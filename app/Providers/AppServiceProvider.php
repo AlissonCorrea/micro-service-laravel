@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Model\Customer;
 use App\Model\Transaction;
+use App\Observers\CustomerObserver;
 use App\Observers\TransactionObserver;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Transaction::observe(TransactionObserver::class);
+        Customer::observe(CustomerObserver::class);
     }
 }
